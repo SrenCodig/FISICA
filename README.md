@@ -50,4 +50,6 @@ También puedes importar el repositorio en Vercel; el `Dockerfile.vercel` define
 - Se ignora la resistencia del aire.
 - Los cálculos y resultados se presentan en unidades SI.
 - No hay topes superiores configurados para las variables ni un límite de fuerzas añadidas; se validan las condiciones físicas necesarias para calcular cada ensayo.
+- Puedes elegir unidades de longitud (m/km), velocidad (m/s, km/h, km/s) y tiempo (s/min/h). El backend convierte los valores a SI antes de calcular.
+- Las escenas aceleran el tiempo simulado y duran como máximo cinco segundos en pantalla.
 - El avance de los temas se guarda en el almacenamiento local del navegador.

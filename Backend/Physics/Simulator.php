@@ -2,27 +2,65 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../Config/constants.php';
 
+function row(string $name, float|int $value, string $unit): array
+{
+    return ['name' => $name, 'value' => $value, 'unit' => $unit];
+}
+
 function simulate(string $topic, array $v): array
 {
-    $g = GRAVITY;
+    $g = (float)($v['gravity'] ?? GRAVITY);
+    $inputs = [];
+    $outputs = [];
+    $series = ['curve' => $topic];
     switch ($topic) {
         case 'freefall':
-            $h = $v['height']; $t = sqrt(2 * $h / $g); $speed = $g * $t;
-            return ['metrics' => [['label'=>'Tiempo de caída','value'=>round($t,2),'unit'=>'s'],['label'=>'Velocidad final','value'=>round($speed,2),'unit'=>'m/s'],['label'=>'Altura inicial','value'=>round($h,2),'unit'=>'m']], 'series'=>['time'=>$t,'height'=>$h,'vx'=>0,'vy'=>$speed,'range'=>0,'curve'=>'fall']];
+            $h = (float)$v['height']; $u = (float)$v['initialSpeed'];
+            $t = ($u + sqrt($u * $u + 2 * $g * $h)) / $g;
+            $final = $u + $g * $t;
+            $inputs = [row('Altura inicial', $h, 'm'), row('Velocidad inicial hacia abajo', $u, 'm/s'), row('Gravedad', $g, 'm/s²')];
+            $outputs = [row('Tiempo hasta el suelo', $t, 's'), row('Velocidad al impactar', $final, 'm/s'), row('Aceleración', $g, 'm/s²'), row('Distancia recorrida', $h, 'm')];
+            $series += ['time'=>$t,'height'=>$h,'initialSpeed'=>$u,'gravity'=>$g];
+            break;
         case 'mru':
-            $speed = $v['speed']; $t = $v['time']; $distance = $speed * $t;
-            return ['metrics'=>[['label'=>'Distancia','value'=>round($distance,2),'unit'=>'m'],['label'=>'Velocidad constante','value'=>round($speed,2),'unit'=>'m/s'],['label'=>'Tiempo','value'=>round($t,2),'unit'=>'s']], 'series'=>['time'=>$t,'height'=>0,'vx'=>$speed,'vy'=>0,'range'=>$distance,'curve'=>'line']];
+            $x0 = (float)$v['position']; $speed = (float)$v['speed']; $t = (float)$v['time']; $x = $x0 + $speed * $t;
+            $inputs = [row('Posición inicial', $x0, 'm'), row('Velocidad', $speed, 'm/s'), row('Tiempo', $t, 's')];
+            $outputs = [row('Posición final', $x, 'm'), row('Desplazamiento', $speed * $t, 'm'), row('Rapidez', abs($speed), 'm/s'), row('Aceleración', 0, 'm/s²')];
+            $series += ['time'=>$t,'position'=>$x0,'speed'=>$speed,'distance'=>$speed*$t];
+            break;
         case 'forces':
-            $mass=$v['mass']; $a=0.0; $x=0.0; $y=0.0; $vectors=[];
-            foreach ($v['forces'] as $f) { $rad=deg2rad($f['angle']); $fx=$f['magnitude']*cos($rad); $fy=$f['magnitude']*sin($rad); $x+=$fx; $y+=$fy; $vectors[]=['magnitude'=>$f['magnitude'],'angle'=>$f['angle'],'x'=>round($fx,2),'y'=>round($fy,2)]; }
-            $resultant=hypot($x,$y); $angle=rad2deg(atan2($y,$x)); $a=$resultant/$mass;
-            return ['metrics'=>[['label'=>'Fuerza resultante','value'=>round($resultant,2),'unit'=>'N'],['label'=>'Dirección','value'=>round($angle,1),'unit'=>'°'],['label'=>'Aceleración','value'=>round($a,2),'unit'=>'m/s²']], 'series'=>['time'=>2,'height'=>0,'vx'=>$resultant,'vy'=>0,'range'=>$resultant,'curve'=>'vectors','vectors'=>$vectors,'mass'=>$mass]];
+            $mass = (float)$v['mass']; $fx = 0.0; $fy = 0.0; $vectors = [];
+            foreach ($v['forces'] as $i => $force) {
+                $magnitude = (float)$force['magnitude']; $angle = (float)$force['angle'];
+                $x = $magnitude * cos(deg2rad($angle)); $y = $magnitude * sin(deg2rad($angle)); $fx += $x; $fy += $y;
+                $inputs[] = row('Fuerza ' . ($i + 1) . ' · magnitud', $magnitude, 'N');
+                $inputs[] = row('Fuerza ' . ($i + 1) . ' · ángulo', $angle, '°');
+                $vectors[] = ['magnitude'=>$magnitude,'angle'=>$angle,'x'=>$x,'y'=>$y];
+            }
+            $resultant = hypot($fx, $fy);
+            $inputs[] = row('Masa del anillo', $mass, 'kg');
+            $outputs = [row('Componente resultante en X', $fx, 'N'), row('Componente resultante en Y', $fy, 'N'), row('Fuerza resultante', $resultant, 'N'), row('Dirección resultante', rad2deg(atan2($fy, $fx)), '°'), row('Aceleración del anillo', $resultant / $mass, 'm/s²')];
+            $series += ['vectors'=>$vectors,'mass'=>$mass,'resultantX'=>$fx,'resultantY'=>$fy];
+            break;
         case 'projectile':
-            $speed=$v['speed']; $rad=deg2rad($v['angle']); $vx=$speed*cos($rad); $vy=$speed*sin($rad); $h=$v['height']; $t=($vy+sqrt($vy*$vy+2*$g*$h))/$g; $range=$vx*$t; $maxH=$h+($vy*$vy)/(2*$g);
-            return ['metrics'=>[['label'=>'Alcance','value'=>round($range,2),'unit'=>'m'],['label'=>'Altura máxima','value'=>round($maxH,2),'unit'=>'m'],['label'=>'Tiempo de vuelo','value'=>round($t,2),'unit'=>'s']], 'series'=>['time'=>$t,'height'=>$maxH,'vx'=>$vx,'vy'=>$vy,'range'=>$range,'curve'=>'projectile']];
+            $speed = (float)$v['speed']; $angle = (float)$v['angle']; $h = (float)$v['height'];
+            $rad = deg2rad($angle); $vx = $speed * cos($rad); $vy = $speed * sin($rad);
+            $t = max(0.0, ($vy + sqrt($vy * $vy + 2 * $g * $h)) / $g);
+            $range = $vx * $t; $apex = $h + max(0.0, $vy) ** 2 / (2 * $g);
+            $inputs = [row('Velocidad inicial', $speed, 'm/s'), row('Ángulo del cañón', $angle, '°'), row('Altura del cañón', $h, 'm'), row('Gravedad', $g, 'm/s²')];
+            $outputs = [row('Componente horizontal vₓ', $vx, 'm/s'), row('Componente vertical vᵧ', $vy, 'm/s'), row('Alcance horizontal', $range, 'm'), row('Altura máxima', $apex, 'm'), row('Tiempo de vuelo', $t, 's')];
+            $series += ['time'=>$t,'height'=>$apex,'initialHeight'=>$h,'speed'=>$speed,'angle'=>$angle,'vx'=>$vx,'vy'=>$vy,'gravity'=>$g,'range'=>$range];
+            break;
         case 'vertical':
-            $u=$v['speed']; $t=$u/$g; $h=($u*$u)/(2*$g);
-            return ['metrics'=>[['label'=>'Altura máxima','value'=>round($h,2),'unit'=>'m'],['label'=>'Tiempo de subida','value'=>round($t,2),'unit'=>'s'],['label'=>'Velocidad inicial','value'=>round($u,2),'unit'=>'m/s']], 'series'=>['time'=>$t,'height'=>$h,'vx'=>0,'vy'=>$u,'range'=>0,'curve'=>'vertical']];
-        default: throw new InvalidArgumentException('Tema de simulación desconocido.');
+            $speed = (float)$v['speed']; $h = (float)$v['height'];
+            $tApex = max(0.0, $speed / $g); $apex = $h + max(0.0, $speed) ** 2 / (2 * $g);
+            $tFlight = max(0.0, ($speed + sqrt($speed * $speed + 2 * $g * $h)) / $g);
+            $inputs = [row('Velocidad inicial', $speed, 'm/s'), row('Altura de lanzamiento', $h, 'm'), row('Gravedad', $g, 'm/s²')];
+            $outputs = [row('Altura máxima', $apex, 'm'), row('Tiempo hasta altura máxima', $tApex, 's'), row('Tiempo hasta el suelo', $tFlight, 's'), row('Velocidad al impactar', $speed - $g * $tFlight, 'm/s')];
+            $series += ['time'=>$tFlight,'apexTime'=>$tApex,'height'=>$apex,'initialHeight'=>$h,'initialSpeed'=>$speed,'gravity'=>$g];
+            break;
+        default:
+            throw new InvalidArgumentException('Tema de simulación desconocido.');
     }
+    return ['inputs'=>$inputs,'outputs'=>$outputs,'series'=>$series];
 }

@@ -1,6 +1,6 @@
 # Física en juego
 
-Laboratorio interactivo de física con cinco simuladores: caída libre, movimiento rectilíneo uniforme, mesa de fuerzas, movimiento parabólico y lanzamiento vertical. La interfaz anima cada ensayo y consulta el backend PHP para calcular resultados.
+Laboratorio interactivo de física con cinco simuladores: caída libre, movimiento rectilíneo uniforme, mesa de fuerzas, movimiento parabólico y lanzamiento vertical. Cada tema tiene una escena dibujada, variables editables y una tabla que recoge todos los valores de entrada y los resultados calculados por PHP.
 
 ## Estructura
 
@@ -46,7 +46,8 @@ También puedes importar el repositorio en Vercel; el `Dockerfile.vercel` define
 
 ## Supuestos del modelo
 
-- Gravedad terrestre constante: 9.81 m/s².
+- Valor inicial de gravedad: 9.81 m/s²; se puede cambiar en los lanzamientos.
 - Se ignora la resistencia del aire.
 - Los cálculos y resultados se presentan en unidades SI.
+- No hay topes superiores configurados para las variables ni un límite de fuerzas añadidas; se validan las condiciones físicas necesarias para calcular cada ensayo.
 - El avance de los temas se guarda en el almacenamiento local del navegador.

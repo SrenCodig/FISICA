@@ -6,7 +6,7 @@
   <title>Física en juego — laboratorio interactivo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/Frontend/CSS/base.css"><link rel="stylesheet" href="/Frontend/CSS/layout.css"><link rel="stylesheet" href="/Frontend/CSS/components.css"><link rel="stylesheet" href="/Frontend/CSS/simulator.css"><link rel="stylesheet" href="/Frontend/CSS/force-table.css"><link rel="stylesheet" href="/Frontend/CSS/responsive.css"><link rel="stylesheet" href="/Frontend/CSS/darkmode.css">
+  <link rel="stylesheet" href="/Frontend/CSS/base.css"><link rel="stylesheet" href="/Frontend/CSS/layout.css"><link rel="stylesheet" href="/Frontend/CSS/components.css"><link rel="stylesheet" href="/Frontend/CSS/simulator.css"><link rel="stylesheet" href="/Frontend/CSS/force-table.css"><link rel="stylesheet" href="/Frontend/CSS/weight.css"><link rel="stylesheet" href="/Frontend/CSS/responsive.css"><link rel="stylesheet" href="/Frontend/CSS/darkmode.css">
 </head>
 <body>
 <div class="app-shell">
@@ -15,10 +15,10 @@
     <div class="side-caption">LABORATORIO</div>
     <nav id="topic-nav" aria-label="Temas de física">
       <button class="nav-item active" data-topic="freefall"><span class="nav-icon">↧</span><span>Caída libre</span><span class="nav-dot"></span></button>
-      <button class="nav-item" data-topic="mru"><span class="nav-icon">→</span><span>Movimiento rectilíneo</span></button>
-      <button class="nav-item" data-topic="forces"><span class="nav-icon">✣</span><span>Mesa de fuerzas</span></button>
-      <button class="nav-item" data-topic="projectile"><span class="nav-icon">⌁</span><span>Movimiento parabólico</span></button>
-      <button class="nav-item" data-topic="vertical"><span class="nav-icon">↑</span><span>Lanzamiento vertical</span></button>
+      <button class="nav-item" data-topic="mru"><span class="nav-icon">→</span><span>Movimiento rectilíneo</span><span class="nav-dot"></span></button>
+      <button class="nav-item" data-topic="forces"><span class="nav-icon">✣</span><span>Mesa de fuerzas</span><span class="nav-dot"></span></button>
+      <button class="nav-item" data-topic="projectile"><span class="nav-icon">⌁</span><span>Movimiento parabólico</span><span class="nav-dot"></span></button>
+      <button class="nav-item" data-topic="vertical"><span class="nav-icon">↑</span><span>Lanzamiento vertical</span><span class="nav-dot"></span></button>
     </nav>
     <div class="sidebar-bottom"><div class="avatar">FL</div><div><strong>Tu laboratorio</strong><small>Progreso local</small></div><span class="online-dot"></span></div>
   </aside>

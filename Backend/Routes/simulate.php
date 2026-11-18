@@ -11,7 +11,7 @@ try {
     $required = match ($body['topic']) {
         'freefall' => ['height','initialSpeed','gravity'],
         'mru' => ['position','speed','time'],
-        'forces' => ['mass','forces'],
+        'forces' => ['mass','gravity','forces'],
         'projectile' => ['speed','angle','height','gravity'],
         'vertical' => ['speed','height','gravity'],
         default => throw new InvalidArgumentException('Tema de simulación desconocido.')

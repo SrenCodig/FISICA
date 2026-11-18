@@ -29,7 +29,7 @@ function simulate(string $topic, array $v): array
             $series += ['time'=>$t,'position'=>$x0,'speed'=>$speed,'distance'=>$speed*$t];
             break;
         case 'forces':
-            $mass = (float)$v['mass']; $fx = 0.0; $fy = 0.0; $vectors = [];
+            $mass = (float)$v['mass']; $weight = $mass * $g; $fx = 0.0; $fy = 0.0; $vectors = [];
             foreach ($v['forces'] as $i => $force) {
                 $magnitude = (float)$force['magnitude']; $angle = (float)$force['angle'];
                 $x = $magnitude * cos(deg2rad($angle)); $y = $magnitude * sin(deg2rad($angle)); $fx += $x; $fy += $y;
@@ -41,8 +41,9 @@ function simulate(string $topic, array $v): array
             if (abs($fy) < 1e-12) $fy = 0.0;
             $resultant = hypot($fx, $fy);
             $inputs[] = row('Masa del anillo', $mass, 'kg');
-            $outputs = [row('Componente resultante en X', $fx, 'N', 'ΣFₓ = Σ(Fᵢ cos θᵢ)'), row('Componente resultante en Y', $fy, 'N', 'ΣFᵧ = Σ(Fᵢ sin θᵢ)'), row('Fuerza resultante', $resultant, 'N', '|ΣF| = √(ΣFₓ² + ΣFᵧ²)'), row('Dirección resultante', rad2deg(atan2($fy, $fx)), '°', 'θ = atan2(ΣFᵧ, ΣFₓ)'), row('Aceleración del anillo', $resultant / $mass, 'm/s²', 'a = |ΣF| / m', 'acceleration')];
-            $series += ['vectors'=>$vectors,'mass'=>$mass,'resultantX'=>$fx,'resultantY'=>$fy];
+            $inputs[] = row('Gravedad', $g, 'm/s²', '', 'acceleration');
+            $outputs = [row('Peso del anillo', $weight, 'N', 'W = m · g'), row('Fuerza normal de la mesa', $weight, 'N', 'N = W = m · g'), row('Componente resultante en X', $fx, 'N', 'ΣFₓ = Σ(Fᵢ cos θᵢ)'), row('Componente resultante en Y', $fy, 'N', 'ΣFᵧ = Σ(Fᵢ sin θᵢ)'), row('Fuerza resultante de las cuerdas', $resultant, 'N', '|ΣF| = √(ΣFₓ² + ΣFᵧ²)'), row('Dirección resultante', rad2deg(atan2($fy, $fx)), '°', 'θ = atan2(ΣFᵧ, ΣFₓ)'), row('Aceleración del anillo', $resultant / $mass, 'm/s²', 'a = |ΣF| / m', 'acceleration')];
+            $series += ['vectors'=>$vectors,'mass'=>$mass,'weight'=>$weight,'gravity'=>$g,'resultantX'=>$fx,'resultantY'=>$fy];
             break;
         case 'projectile':
             $speed = (float)$v['speed']; $angle = (float)$v['angle']; $h = (float)$v['height'];
